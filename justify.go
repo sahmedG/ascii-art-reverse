@@ -19,12 +19,7 @@ func Aliging(letters_to_be_colored, text, font, align, color string) string {
 	if align == "left" || align == "right" || align == "center" {
 		return RightLeft(letters_to_be_colored, text, MapFont(font), align, color)
 	} else if align == "justify" {
-		
-		lines := strings.Split(text, "\\n")
-		for _, v := range lines {
-			string_beg_end, _ := ContainsString(letters_to_be_colored, v)
-			Justify(string_beg_end, letters_to_be_colored, text, v, MapFont(font), color)
-		}
+		Justify(letters_to_be_colored, text, MapFont(font), color)
 	}
 	return ""
 }
@@ -33,16 +28,13 @@ func RightLeft(letters_to_be_colored, text, font, align, color string) string {
 	newres := ""
 	test := ""
 	size := 0
-
 	if text == "\\n" {
 		return newres
 	}
 	args := strings.Split(text, "\\n")
-
 	for _, word := range args {
 		string_beg_end, _ := ContainsString(letters_to_be_colored, word)
 		if word == "" {
-
 		} else {
 			for i := 0; i <= 8; i++ {
 				str_len := len(word)
@@ -63,7 +55,6 @@ func RightLeft(letters_to_be_colored, text, font, align, color string) string {
 					if i == 0 {
 						size = len(test)
 					}
-
 					if IsInRange(string_beg_end, idx) || letters_to_be_colored == "" {
 						// Start printing the colored letler ART
 						res += PrintFileLine(MapART(rune(char))+i, (font), color)
@@ -71,7 +62,6 @@ func RightLeft(letters_to_be_colored, text, font, align, color string) string {
 						// Start printing the letler ART in default color
 						res += PrintFileLine(MapART(rune(char))+i, (font), "")
 					}
-
 				}
 				if align == "left" {
 					newres += res
@@ -92,53 +82,64 @@ func RightLeft(letters_to_be_colored, text, font, align, color string) string {
 	}
 	return newres
 }
-func Justify(string_beg_end [][]int, letters_to_be_colored, text, words, font, color string) {
-	sws := SplitWhiteSpacesAWESOME(words)
-	ar := make([][]string, len(sws))
-	j := 0
+func Justify(letters_to_be_colored, text, font, color string) {
+	lines := strings.Split(text, "\\n")
 
-	container := ""
-	if len(sws) == 1 {
-		Ascii_Print(RightLeft(letters_to_be_colored, text, font, "left", color))
-
-	} else {
-		for i := 0; i < 8; i++ {
-			j = 0
-			for k, letter := range words {
-				if letter != ' ' {
-
-					if IsInRange(string_beg_end, k) || letters_to_be_colored == "" {
-						// Start printing the colored letler ART
-						container += PrintFileLine(MapART((letter))+i, (font), color)
-					} else {
-						// Start printing the letler ART in default color
-						container += PrintFileLine(MapART((letter))+i, (font), "")
+	
+	for _, v := range lines {
+		var sws []string
+		size := 0
+		test := ""
+		j := 0
+		container := ""
+		var string_beg_end [][]int
+		sws = SplitWhiteSpacesAWESOME(v)
+		string_beg_end, _ = ContainsString(letters_to_be_colored, v)
+		ar := make([][]string, len(sws))
+		if len(sws) == 1 {
+			Ascii_Print(RightLeft(letters_to_be_colored, v, font, "left", color))
+		} else {
+			for i := 0; i < 8; i++ {
+				j = 0
+				for k, letter := range v {
+					if letter != ' ' {
+						test += PrintFileLine(MapART((letter))+i, (font), "")
+						if IsInRange(string_beg_end, k) || letters_to_be_colored == "" {
+							// Start printing the colored letler ART
+							container += PrintFileLine(MapART((letter))+i, (font), color)
+						} else {
+							// Start printing the letler ART in default color
+							container += PrintFileLine(MapART((letter))+i, (font), "")
+						}
+						//container += PrintFileLine((MapART(letter) + i), font, "")
+					} else if letter == ' ' && container != "" {
+						ar[j] = append(ar[j], container)
+						container = ""
+						j++
 					}
-					//container += PrintFileLine((MapART(letter) + i), font, "")
-				} else if letter == ' ' && container != "" {
-					ar[j] = append(ar[j], container)
-					container = ""
-					j++
+
 				}
-
-			}
-			ar[j] = append(ar[j], container)
-			container = ""
-		}
-		textLen := 0
-		for _, arOfStr := range ar {
-			textLen += len(arOfStr[0])
-		}
-
-		numSpaces := (termWidth - textLen) / (len(sws) - 1)
-		for i := 0; i < 8; i++ {
-			for k, v := range ar {
-				fmt.Print(v[i])
-				if k != len(ar)-1 {
-					fmt.Print(printSpaces(numSpaces))
+				ar[j] = append(ar[j], container)
+				container = ""
+				if i == 0 {
+					size = len(test)
 				}
 			}
-			fmt.Println()
+			textLen := 0
+			for _, arOfStr := range ar {
+				textLen += len(arOfStr[0])
+			}
+
+			numSpaces := (termWidth - size) / (len(sws) - 1)
+			for i := 0; i < 8; i++ {
+				for k, v := range ar {
+					fmt.Print(v[i])
+					if k != len(ar)-1 {
+						fmt.Print(printSpaces(numSpaces))
+					}
+				}
+				fmt.Println()
+			}
 		}
 	}
 }
@@ -180,11 +181,13 @@ func SplitWhiteSpacesAWESOME(str string) []string {
 
 	ar := make([]string, nbw)
 	a := 0
+
 	for _, v := range str {
-		if v != 32 && v != '\t' && v != '\n' {
+		//fmt.Println(v)
+		if v != ' ' && v != '\t' && v != '\n' && word != "" {
 			word = word + string(v)
 		}
-		if v == 32 || v == '\t' || v == '\n' && word != "" {
+		if v == ' ' || v == '\t' || v == '\n' && word != "" {
 			a++
 			ar[a-1] = word
 			word = ""
@@ -192,8 +195,8 @@ func SplitWhiteSpacesAWESOME(str string) []string {
 
 	}
 
-	// if word != "" {
-	// 	ar[a] = word
-	// }
+	if word != "" {
+		ar[a] = word
+	}
 	return ar
 }
